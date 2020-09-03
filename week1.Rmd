@@ -1,6 +1,6 @@
 ---
 title: "Week 1: Physics Problem"
-subtitle: "Snell's Law of Diffraction"
+subtitle: "Snell's Law of Refraction"
 author: "Tristan Caro"
 date: "Last knitted `r format(Sys.Date(), '%d %b %Y')`"
 output:
