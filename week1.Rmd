@@ -1,0 +1,74 @@
+---
+title: "Week 1: Physics Problem"
+subtitle: "Snell's Law of Refraction"
+author: "Tristan Caro"
+date: "Last knitted `r format(Sys.Date(), '%d %b %Y')`"
+output:
+  html_document: 
+    df_print: paged
+    number_sections: yes
+    toc: yes
+    toc_float: true
+    toc_depth: 3
+    code_folding: show
+editor_options:
+  chunk_output_type: inline
+---
+
+> Click into a code cell (the gray blocks below) to select or edit it. To run a selected code cell, hit `Ctrl`+`Shift`+`Enter` (Windows & Linux) / `Command`+`Shift`+`Enter` (MacOS). Make sure that each code cell runs successfully before you move on to the next one.
+
+# Snell's Law of Diffraction
+## Learning Goals - Snell's Law of Diffraction
+> After doing this exercise, you should be able to...
+
+1. Describe what each variable in Snell's Law stands for
+2. Identify examples of Snell's law in everyday life
+3. Calculate the diffraction of light as it passes between media
+
+## Background
+Light travels at a constant speed . . . in a vacuum. Most of the time, at least on planet Earth, light is not traveling through a vacuum but through air, water, or glass. When light passes through a media such as these, it interacts with the material, causing the light to slow down. This causes an effect called diffraction, where the path of light appears to bend. This can be seen when putting a straw in a glass of water, or by looking into a body of water.
+
+Snell's law describes the path of light as it changes between media as follows:
+$$
+{sin\theta_2\over sin\theta_1} = {v_2\over v_1} = {n_1 \over n_2}
+$$
+Where theta is the angle of the light-path from the normal of the interface, v is the velocity of light, and n is the index of refraction, for medium 1 and 2 respectively.
+
+## Examples
+
+Let's try an example. Let's say light is interacting with the interface between air (n~1.00) and an optical fiber (n=1.44). The angle of incidence of the light to the fiber face is 22 degrees. What is the angle of refraction inside the fiber?
+
+Using Snell's law we can substitute (pay mind to assigning the correct numbers to their respective variables):
+
+$$
+sin\theta_2 (1.44) = (1.00)(sin(22^{\circ}))
+
+\\
+sin\theta_2 = (1/1.44)sin(22^{\circ})) = .260
+\\
+\theta_2 = sin^{-1}(0.260) = 15^{\circ}
+$$
+So the light would now be traveling at 15 degrees from the normal. This means the light has bent "inwards" towards the center of the optic cable. Given a range of incidence angles, we can calculate the angle of refraction:
+
+```{r}
+n1 <- 1.00
+n2 <- 1.44
+# Need to switch to radians for R trig calculations
+incidence_deg <- c(5, 10, 15, 20, 25, 30)
+incidence_radians <- incidence_deg *pi/180
+refraction_radians <-  asin(n1/n2*(sin(incidence_radians)))
+refraction_deg <- refraction_radians * 180/pi
+refraction_deg
+```
+
+
+## Questions
+> Q1: What does snell's law of refraction let us define?
+
+> Q2: What happens when n1 = n2?
+
+> Q3: What would you expect to happen when the angle of refraction is equal to 90 degrees? Greater than 90 degrees?
+
+> Q4: What are some scientific/technological applications of refraction and reflection?
+
+
