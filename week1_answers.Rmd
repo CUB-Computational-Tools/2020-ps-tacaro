@@ -1,0 +1,25 @@
+---
+title: "Week 1: Physics Problem - Answers"
+subtitle: "Snell's Law of Refraction"
+author: "Tristan Caro"
+date: "Last knitted `r format(Sys.Date(), '%d %b %Y')`"
+output:
+  html_document: 
+    df_print: paged
+    number_sections: yes
+    toc: yes
+    toc_float: true
+    toc_depth: 3
+    code_folding: show
+editor_options:
+  chunk_output_type: inline
+---
+
+# Answers
+Q1: Snell's law of diffraction lets us calculate how the path of light changes as it transitions from one medium to another. Additionally, using these "angles of refraction" we can calculate the refraction index of an unknown medium.
+
+Q2: When n1 = n2, the indices of refraction are identical. The path of light would not change.
+
+Q3: When the angle of refraction is 90 degrees, the path of light is bent so that it is now parallel with the media interface. When greater than 90 degrees, the light is reflected and does not transmit into the second medium.
+
+Q4: Total internal reflection flourescence (TIRF) microscopy relies on this principle. When the angle of refraction is near 90 degrees, total internal reflection occurs. This illuminates a small slice of the sample under the microscope, increasing resolution by decreasing noise.
