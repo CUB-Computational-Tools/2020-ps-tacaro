@@ -1,0 +1,211 @@
+---
+title: "Lotka-Volterra Equations"
+subtitle: "Predator-Prey Modeling in Python"
+date: "Last knitted `r format(Sys.Date(), '%d %b %Y')`"
+output:
+  html_document: 
+    df_print: paged
+    number_sections: yes
+    toc: yes
+    toc_float: true
+    toc_depth: 3
+    code_folding: show
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r, include = FALSE, message = FALSE}
+# required behind the scenes to find the correct python installation
+library(reticulate)
+
+# include the following command to activate a specific conda environment:
+#use_condaenv(condaenv = "my_env", required = TRUE)
+
+# note that this may get stuck knitting automatically in RStudio but will work 
+# if you knit manually using the following command from the console:
+#rmarkdown::render("example_python_in_rstudio.Rmd")
+```
+
+# Learning Goals {-}
+By completing this tutorial, we hope to demonstrate:
+- Basics of ecological population modeling
+- How differential equations are used in ecology
+- How to iteratively transform data in python
+- How to create and manipulate parallel arrays
+
+# Prerequisites {-}
+Before beginning this tutorial, one should be familiar with:
+- Storing and manipulating variables
+- Conditional operators
+- Matplotlib plotting functions
+- Derivatives as instantaneous rates of change
+
+# Background {-}
+The Lotka-Volterra equations are a basic ecological modeling system that uses first-order nonlinear differential equations to describe interactions between a predator and prey animal population.
+
+Populations of each animal change through time according to a pair of equations:
+
+$$
+\frac{dx}{dt} = \alpha x - \beta xy \\
+\frac{dy}{dt} = \delta xy - \gamma y
+$$
+where
+- x is the prey population (e.g. rabbits)
+- y is the predator population (e.g. wolves)
+- Derivatives $\frac{dy}{dt}$ and $\frac{dx}{dt}$ represent the rate of population change in either population.
+- $\alpha$, $\beta$ $\gamma$ and $\delta$ are constants that describe species-species interactions. 
+
+$\alpha x$ represents prey population growth. This is assumed to be exponential in the presence of adequate nutrition and no predation. This term is counterbalanced by $\beta xy$, which represents loss of prey due to predation.
+
+$\delta xy$ represents the increase in predator population as a result of prey consumption. $\gamma y$ represents loss of predators due to death (or starvation).
+
+In this tutorial, we'll be implementing this model in *Python*, as a launchpad into more complex ecological modeling topics.
+
+In order to store data on animal populations, we will need two arrays, one array each to represent the *predator* and *prey* populations. In each array, the ith element represents the population of each animal at time **i**. For example:
+
+```{python}
+array_1 = [4,5,10,12,20]
+array_2 = [0,2,3,6,8]
+# Are these arrays the same length?
+len(array_1) == len(array_2) # True
+```
+
+`array_1` and `array_2` are considered parallel because they 1) have the same dimensions (length = 5) and the values of each index represent two variable instances of the same "observation". Proceeding along these arrays is much like proceeding down a tibble in R.
+
+We can iteratively create (i.e. one step at a time) parallel arrays to store meaningful data! Even more importantly, as we create new data, this new data can be based off pre-existing data in the arrays.
+
+# Example {-}
+
+How can we implement the Lotka-Volterra equations in python using parallel arrays?
+
+First, let's import our friend `matplotlib` as `plt`.
+```{python}
+import matplotlib.pyplot as plt
+```
+
+Because we are working in arrays with discrete indices, we are constrained to think about animal populations in discrete time, which we will call `t` and to which we will assign an arbitrary value (think of it as days).
+
+```{python}
+days = 1000
+```
+
+At `t=0`, the start point of our simulation, we will need to set initial parameters for predator and prey populations. In essence, how many rabbits and wolves were in our forest to start? I'll choose two values arbitrarily.
+
+```{python}
+initPrey = 50
+initPred = 10
+```
+
+Then, we will need to choose our equation constants. Referencing the equations above (and replacing Greek characters with Latin characters), we can set the following rates arbitrarily:
+- Attack rate (b) = 0.2
+- Prey growth rate (a) = 0.01
+- Predator mortality rate (m) = 0.05
+- Conversion constant of prey into predators (k) = 0.1
+
+In real ecological modeling, these sorts of parameters are often based off of empirical data.
+
+```{python}
+a = 0.01
+b = 0.2
+m = 0.05
+k = 0.1
+```
+
+I find parameter `k` to be the most confusing. After all, what in tarnation is a conversion rate between species? I find it helpful to think about it as such: how many rabbits does a wolf have to eat before its population can grow by 1? In this case, a wolf must consume 10 rabbits for another wolf to be added to the population pool.
+
+Next, we will need an array to store time and predator/prey abundances. What dimensions do we want this data frame to be? We probably want *rows* to represent instances of time, and *columns* to hold values of what is happening at that time. So this can be a **long** dataframe that is 3 columns wide: `t`, prey population, predator population, and `t` columns long.
+
+We can use parallel arrays to accomplish this task. First we create two empty python objects of type `list` using empty square brackets `[]`.
+We then use the `.append()` function to add new values. `.append()` is a useful python function that adds the argument of the append function to the end of an array.
+
+> Note that I refer to these objects as "arrays" even though, in python, they are objects of type `list`. Lists in python are 1-dimensional arrays.
+
+```{python}
+# Assign empty lists
+prey = []
+pred = []
+# Append the initial population values
+prey.append(initPrey)
+pred.append(initPred)
+# Inspect the values
+prey
+pred
+```
+
+Now we can use a `for` loop to iteratively expand these parallel arrays.
+
+```{python}
+for t in range(1, days):
+  # Break if somehow the length of the array gets too long
+  if len(prey) > 1000 or len(pred) > 1000:
+    break
+  # Break if a population value goes negative
+  if prey[t-1] < 0:
+    break
+  if pred[t-1] < 0:
+    break
+  # Do the calculations  
+  prey.append((prey[-1] + (b*prey[-1]) - (a*prey[-1]*pred[-1])))
+  pred.append((pred[-1] + (k*a*prey[-1]*pred[-1]) - (m*pred[-1])))
+  
+```
+
+Remember, an important part of parallel arrays is that they must have identical dimensions. If they don't, something went wrong! We can engineer a basic code check using conditional statements:
+
+```{python}
+
+if len(prey) == len(pred):
+  print("Parallel arrays are the same length!")
+elif len(prey) != len(pred):
+  print("Oh no! The arrays are different lengths!")
+
+```
+
+```{python}
+plt.plot(prey, label = "Prey Population")
+plt.plot(pred, label = "Predator Population")
+plt.ylabel("Population")
+plt.xlabel("Time")
+plt.legend(loc="upper right")
+plt.show()
+
+```
+
+If, for some reason, we wanted the simulation to terminate when one of the animal populations becomes higher than a certain value, let's say 1000, we could use a `while` loop to ensure this behavior. *while* the condition "<1000" is met, the code within the statement will execute. I use the python-specific indexing of `[-1]` to refer to the last element in the array. While loops can cause infinite looping if you are not careful. I'll put an `if` statement that `break`s the loop should the length of either array exceed 1000.
+
+```{python}
+while (prey[-1] < 1000 and pred[-1] < 1000):
+  if len(prey) > 1000 or len(pred) > 1000:
+    break
+  prey.append(prey[-1] + (b*prey[-1]) - (a*prey[-1]*pred[-1]))
+  pred.append(pred[-1] + (k*a*prey[-1]*pred[-1]) - (m*pred[-1]))
+```
+
+```{python}
+# Do our sanity check again
+if len(prey) == len(pred):
+  print("Parallel arrays are the same length!")
+elif len(prey) != len(pred):
+  print("Oh no! The arrays are different lengths!")
+  
+# Create our plot
+plt.plot(prey, label = "Prey Population")
+plt.plot(pred, label = "Predator Population")
+plt.ylabel("Population")
+plt.xlabel("Time")
+plt.legend(loc="upper right")
+plt.show()
+```
+
+# Questions {-}
+1. What stands out to you about the results from the Lotka-Volterra equation? Propose a hypothesis explaining your finding.
+
+2. What is different about how you would implement this feature in R versus how we did so here in python?
+
+3. What do you notice is different between plotting that is implemented with `matplotlib` versus using `ggplot`?
+
+4. Change some of the parameters of the simulation. Explain how the parameter you changed affected the results.
+
+
+
+

@@ -1,0 +1,93 @@
+---
+title: "Lotka-Volterra Equations"
+subtitle: "Predator-Prey Modeling in Python"
+date: "Last knitted `r format(Sys.Date(), '%d %b %Y')`"
+output:
+  html_document: 
+    df_print: paged
+    number_sections: yes
+    toc: yes
+    toc_float: true
+    toc_depth: 3
+    code_folding: show
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r, include = FALSE, message = FALSE}
+# required behind the scenes to find the correct python installation
+library(reticulate)
+
+# include the following command to activate a specific conda environment:
+#use_condaenv(condaenv = "my_env", required = TRUE)
+
+# note that this may get stuck knitting automatically in RStudio but will work 
+# if you knit manually using the following command from the console:
+#rmarkdown::render("example_python_in_rstudio.Rmd")
+```
+
+
+```{python, include = FALSE}
+import matplotlib.pyplot as plt
+```
+
+# Answers {-}
+> 1. What stands out to you about the results from the Lotka-Volterra equation? Propose a hypothesis explaining your finding.
+
+What is most striking to me is how predictably sinusoidal they are in shape. This is due to the nature of the first-order differential equations that are the basis of the Lotka-Volterra equations:
+$$
+\frac{dx}{dt} = \alpha x - \beta xy \\
+\frac{dy}{dt} = \delta xy - \gamma y
+$$
+Notice how the *loss term* from the prey population is dependent on the population of the predators; additionally, the *gain term* from the predator population is dependent on the population of the prey!
+These two rates of change grow and shrink in **reaction** to each other.
+
+Now - what if humans hunted away all the wolves? What happens to that loss term $\beta xy$?
+
+> 2. What is different about how you would implement this feature in R versus how we did so here in python?
+
+Not too much - the differences would only arise if you were using `numpy` `pandas` versus `tidyverse` tibbles. R also has "arrays" that are assigned using `c(1,2,3,4, ...)` and they can be iterated over in the same way as in python.
+
+> 3. What do you notice is different between plotting that is implemented with `matplotlib` versus using `ggplot`?
+
+As we know, ggplot requires the user to assign *aesthetic* layers that are based off of variables. Matplotlib is done more sequentially. In fact, there are two `plot()` function calls, one for each line to plot!
+
+> 4. Change some of the parameters of the simulation. Explain how the parameter you changed affected the results.
+
+For a fun thought experiment, I changed the predator population to be *double* that of the prey. 100 wolves in a forest with only 50 rabbits! And looking back on our `k` conversion factor, it takes 10 rabbits to generate a new wolf. Things don't look good for the wolves. And indeed they are not. The wolves hunt the rabbits to extinction. We can use the `min()` function on to see that the rabbit population declined to `2.7522531002521245e-05`. The wolves, having depleted their food source, dropped to `0.17883997865699214`.  Of course, rabbits and wolves cannot exist as fractions - in reality the rabbits would have gone extinct from hunting; then the wolves from starvation. But we do notice the rabbits, unconstrained by predation, bounce back forcefully at time point 130. Nature finds a way :)
+
+```{python}
+a = 0.01
+b = 0.2
+m = 0.05
+k = 0.1
+initPrey = 50
+initPred = 100
+
+prey = []
+pred = []
+# Append the initial population values
+prey.append(initPrey)
+pred.append(initPred)
+
+while (prey[-1] < 1000 and pred[-1] < 1000):
+  if len(prey) > 1000 or len(pred) > 1000:
+    break
+  prey.append(prey[-1] + (b*prey[-1]) - (a*prey[-1]*pred[-1]))
+  pred.append(pred[-1] + (k*a*prey[-1]*pred[-1]) - (m*pred[-1]))
+  
+# Create our plot
+plt.plot(prey, label = "Prey Population")
+plt.plot(pred, label = "Predator Population")
+plt.ylabel("Population")
+plt.xlabel("Time")
+plt.legend(loc="upper right")
+plt.show()
+```
+
+```{python}
+min(prey)
+min(pred)
+```
+
+
