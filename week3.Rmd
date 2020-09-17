@@ -43,7 +43,7 @@ Before beginning this tutorial, one should be familiar with:
 # Background {-}
 The Lotka-Volterra equations are a basic ecological modeling system that uses first-order nonlinear differential equations to describe interactions between a predator and prey animal population.
 
-Populations of each animal change through time according to a pear of equations:
+Populations of each animal change through time according to a pair of equations:
 
 $$
 \frac{dx}{dt} = \alpha x - \beta xy \\
@@ -66,7 +66,7 @@ In order to store data on animal populations, we will need two arrays, one array
 ```{python}
 array_1 = [4,5,10,12,20]
 array_2 = [0,2,3,6,8]
-# These arrays are the same length?
+# Are these arrays the same length?
 len(array_1) == len(array_2) # True
 ```
 
@@ -97,8 +97,8 @@ initPred = 10
 ```
 
 Then, we will need to choose our equation constants. Referencing the equations above (and replacing Greek characters with Latin characters), we can set the following rates arbitrarily:
-- Attack rate (a) = 0.2
-- Prey growth rate (r) = 0.01
+- Attack rate (b) = 0.2
+- Prey growth rate (a) = 0.01
 - Predator mortality rate (m) = 0.05
 - Conversion constant of prey into predators (k) = 0.1
 
@@ -116,7 +116,9 @@ I find parameter `k` to be the most confusing. After all, what in tarnation is a
 Next, we will need an array to store time and predator/prey abundances. What dimensions do we want this data frame to be? We probably want *rows* to represent instances of time, and *columns* to hold values of what is happening at that time. So this can be a **long** dataframe that is 3 columns wide: `t`, prey population, predator population, and `t` columns long.
 
 We can use parallel arrays to accomplish this task. First we create two empty python objects of type `list` using empty square brackets `[]`.
-We then use the `.append()` function to add new values. `.append()` is a useful python function that adds the argument of the append function to the end of a list.
+We then use the `.append()` function to add new values. `.append()` is a useful python function that adds the argument of the append function to the end of an array.
+
+> Note that I refer to these objects as "arrays" even though, in python, they are objects of type `list`. Lists in python are 1-dimensional arrays.
 
 ```{python}
 # Assign empty lists
