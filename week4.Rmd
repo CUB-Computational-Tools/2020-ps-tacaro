@@ -1,5 +1,6 @@
 ---
-title: "Example: python in RStudio"
+title: "Plasmid Assembly"
+subtitle: "Virtual Plasmids!"
 date: "Last knitted `r format(Sys.Date(), '%d %b %Y')`"
 output:
   html_document: 
@@ -27,64 +28,196 @@ library(reticulate)
 #rmarkdown::render("example_python_in_rstudio.Rmd")
 ```
 
-# $\LaTeX$ Math
-
-This is just markdown that can include latex math.
-
-$$
-\begin{align}
-\dot{x} & = \sigma(y-x) \\
-\dot{y} & = \rho x - y - xz \\
-\dot{z} & = -\beta z + xy
-\end{align}
-$$
-
-# System Info
-
-```{python}
+```{python, include = FALSE}
 # load IPython library for comprehensive system info
 import IPython
+import re
 print(IPython.sys_info())
 ```
 
+# Learning Goals
+- Import and parse data in python
+- Use functions to manipulate DNA sequences with python
+- Understand how plasmid assembly can be done virtually
+- Apply the basics of DNA ligation/restriction enzymes
 
-# Custom Function
+# Prerequisites
+- Basics of how plasmids are assembled with restriction enzyme digests
+- Basics of bacteria and DNA
+- Basic python syntax
+
+# Background
+Every day, researchers assemble and edit DNA for an uncountable variety of purposes. In the field of Synthetic Biology, researchers often manipulate the DNA of a microorganism in order to change its phenotype, enabling the organism to conduct behavior it otherwise would not have been able to. The canonical example of this is the creation of a circular DNA assembly, known as a *plasmid*, that contains the human gene for insulin. This plasmid is then inserted into a culture of bacteria, often **E. coli**, and produced on an industrial scale.
+
+But how does one create a plasmid? A plasmid must be able to be "read" by its host bacteria and transcribed into RNA, then the target protein. The challenge here isn't in **synthesizing** the DNA (this can be done in an industrial lab at a relatively low cost), but rather in designing a plasmid logically.
+
+A functional plasmid has a few important components:
+1. A vector backbone that allows insertion/proliferation of the plasmid while also providing antibiotic resistance (for genetic screening)
+2. The gene of interest (GOI)
+
+
+```{python, include = FALSE}
+goi = "ATGAACAATGCACTATGGTCAAAAATGCTGGTGGAAGAGGATCCCGGGTTTTTTAGACATAGATACACTCATCAGCAACAATGCACTATGGTCAAAAATGCTGGTGGAAGAGGATCCCGGGTTTTTTGAGAAACTG"
+backbone = "aggctcagtcgaaagactgggcctttcgttttatctgttgtttgtcggtgaacgctctctactagagtcacactggctcaccttcgggtgggcctttctgcgtttataccttaaatattggtttaaaagcaggttaaaagacaggttagcggtggccgaaaaacgggcggaaacccttgcaaa"
+```
+
+In a hidden code chunk I've loaded in a GOI and vector backbone as `goi`,`backbone`, respectively. You can use a `return` call of these variables to print their values.
+
+NOTE: For ease of viewing, these gene sequences have been significantly abbreviated.
+
+If you've printed `backbone`, you may notice that some of the gene sequence is written in upper-text and some in lower-case. Let's write a function to convert all our genes to upper-case.
 
 ```{python}
-# custom function from scripts/functions.py
-from scripts.functions import test_add
-test_add(2,5)
+def to_upper(seq):
+  # First make sure that the argument is a string
+  if isinstance(seq, str) == False:
+    print("Error: sequence is not a string")
+  # Luckily python has a built-in string operation to convert to upper case, so we don't need to do any work :)
+  else:
+    return seq.upper()
 ```
-
-# Data
 
 ```{python}
-# create dataset using pandas and numpy
-import pandas as pd
-import numpy as np
-curve = pd.DataFrame(np.arange(0.0, 2.0, 0.01), columns = list('t'))
-curve['y'] = 1 + np.sin(2 * np.pi * curve['t'])
-curve[1:10] # first 10 rows
+to_upper(1) # Returns an error
+to_upper("abc")
 ```
 
-```{r}
-# sidenote: you can access all python variables in R
-py$curve
+Now we can convert all our strings to upper case:
+
+```{python}
+goi = to_upper(goi)
+term = to_upper(term)
+prom = to_upper(prom)
+backbone = to_upper(backbone)
+# Let's inspect prom
+prom # Looks good!
 ```
 
-# Plot
+But wait, doesn't DNA have two strands? Yep! DNA is canonically written 5' to 3', the direction that DNA polymerase travels. We can generate the **complementary strand** of DNA using a simple function. This function will turn each nucleotide into its complement:
+A --> T
+C --> G
+T --> A
+G --> C
 
-```{r, include = FALSE}
-# make sure the correct display is used for matplotlib
-matplotlib <- import("matplotlib", convert = TRUE)
-matplotlib$use("Agg")
+We'll also add in an optional argument, `rev`, which is a Boolean that specifies whether we want the complement (that reads in-parallel (3' to 5') to our our original sequence), or the **reverse complement**, which is read 5' to 3'.
+
+```{python}
+def make_complement(seq, rev=False):
+  comp = ""
+  for c in seq:
+    if c == "A":
+      comp += ("T")
+    elif c == "T":
+      comp += ("A")
+    elif c == "G":
+      comp += ("C")
+    elif c == "C":
+      comp += ("G")
+    else:
+      comp.append("N") # append generic Nucleotide if non-canonical base found
+  if rev is False:
+    return comp
+  if rev is True:
+    return comp[::-1]
 ```
+
+```{python}
+make_complement("GATTACA") # Let's inspect
+make_complement("GATTACA", rev=True) # Let's try a reverse complement by including the optional argument
+```
+
+Now we'll want to add digestion sites for a restriction enzyme. Let's use EcoRI as an example. 
+The recognition site for EcoRI is `GAATTC` which leaves a 5' overhang of `AATTC` and a 3' overhang of `CTTAA`
+```
+5'      G       <---> AATTC
+3'      CTTAA   <--->     G
+```
+
+When we order our DNA chunks, we definitely want these digest sites on the ends of our DNA!
+
+Let's make a function that can append these important restriction sites to our DNA sequences.
+
+```{python}
+def add_ecori(seq, polarity):
+  if polarity == "head":
+    # Add the recognition site to the 5' end
+    new_seq = "GAATTC" + seq
+  elif polarity == "tail":
+    new_seq = seq + "CTTAA"
+  else:
+    print("Could not add EcoRI site - polarity not 'head' or 'tail'")
+    return None
+  return new_seq
+```
+
+If we want our GOI to be inserted at the *end* of the vector backbone, the *head* of the GOI and the *tail* of the backbone will need an EcoRI site.
+
+```{python}
+backbone_ecori = add_ecori(backbone, "tail")
+ecori_goi = add_ecori(goi, "head")
+
+ecori_goi # see that the recognition site is at the front
+```
+
+We need a different restriction enzyme to make sure that the *head* of the backbone reconnects with the *tail* of the GOI, forming a circular plasmid. Let's define another restriction enzyme function based on NlaIII:
+
+```
+5'      CATG <--> 
+3'           <--> GTAC
+```
+
+```{python}
+def add_NlaIII(seq, polarity):
+  if polarity == "head":
+    # Add the recognition site to the 5' end
+    new_seq = "CATG" + seq
+  elif polarity == "tail":
+    new_seq = seq + "GTAC"
+  else:
+    print("Could not add EcoRI site - polarity not 'head' or 'tail'")
+    return None
+  return new_seq
+```
+
+And add this site accordingly:
+```{python}
+nla_backbone_ecori = add_NlaIII(backbone_ecori, "head")
+ecori_goi_nla = add_NlaIII(ecori_goi, "tail")
+```
+
+
+The structure of the plasmid we are creating is thus:
+
+```
+          EcoRI           NlaIII              EcoRI
+
+          AATTC--insert--     CATG--backbone--G    
+              G--insert--GTAC     --backbone--CTTAA
+                
+```
+
+Now we can assemble our DNA fragments, which have compatible overhangs, into a plasmid! Let's define a function that:
+1. Creates a new DNA sequence
+2. Identifies matching overhangs and "ligates" the input DNA sequences together.
 
 
 ```{python}
-# plot using pyplot
-import matplotlib.pyplot as plt
-plt.rcParams['figure.figsize'] = [8, 6]
-plt.plot(curve['t'], curve['y'])
-plt.show()
+def assemble(insert, backbone):
+  plasmid = ""
+  plasmid += insert + backbone
+  return plasmid
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
