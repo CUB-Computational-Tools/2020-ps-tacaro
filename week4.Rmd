@@ -217,7 +217,12 @@ To check, does the length of `my_plasmid` equal the lengths of its constituent D
 len(my_plasmid) == (len(ecori_goi_nla) + len(nla_backbone_ecori)) # True!
 ```
 
+# Questions
+1. A `.fastq` file is a DNA sequence with a "quality score" that corresponds to each nucleotide. The quality score of the nucleotide represents the confidence the sequencing machine has that it is identifying the correct base. What python data structure do you think would work best for representing this kind of parallel data?
 
+2. *GC Content* is the percentage of a DNA sequence that is made up of guanosine and cytosine. G and C bond more strongly to each other than A and T. GC content is thus is an important metric for understanding the structural stability of a DNA sequence. GC content can vary across organisms and taxa in meaningful ways e.g. organisms in high-temperature environments typically have a high GC content to ensure that their DNA can stay together. How would you implement a function that calculates the GC content of a DNA string?
+
+3. Say you want to look for the motif "GATC" in `backbone`. Write a function that can take in a short sequence motif and tell you whether it is present in a larger sequence.
 
 
 
