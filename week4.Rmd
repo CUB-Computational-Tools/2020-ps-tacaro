@@ -86,11 +86,9 @@ Now we can convert all our strings to upper case:
 
 ```{python}
 goi = to_upper(goi)
-term = to_upper(term)
-prom = to_upper(prom)
 backbone = to_upper(backbone)
 # Let's inspect prom
-prom # Looks good!
+goi # Looks good!
 ```
 
 But wait, doesn't DNA have two strands? Yep! DNA is canonically written 5' to 3', the direction that DNA polymerase travels. We can generate the **complementary strand** of DNA using a simple function. This function will turn each nucleotide into its complement:
@@ -143,7 +141,7 @@ def add_ecori(seq, polarity):
     # Add the recognition site to the 5' end
     new_seq = "GAATTC" + seq
   elif polarity == "tail":
-    new_seq = seq + "CTTAA"
+    new_seq = seq + "G"
   else:
     print("Could not add EcoRI site - polarity not 'head' or 'tail'")
     return None
@@ -172,7 +170,7 @@ def add_NlaIII(seq, polarity):
     # Add the recognition site to the 5' end
     new_seq = "CATG" + seq
   elif polarity == "tail":
-    new_seq = seq + "GTAC"
+    new_seq = seq + ""
   else:
     print("Could not add EcoRI site - polarity not 'head' or 'tail'")
     return None
@@ -183,6 +181,8 @@ And add this site accordingly:
 ```{python}
 nla_backbone_ecori = add_NlaIII(backbone_ecori, "head")
 ecori_goi_nla = add_NlaIII(ecori_goi, "tail")
+ecori_goi_nla # Inspect: EcoRI site (GAATTC) should lead and nla site (none) should follow
+nla_backbone_ecori # Inspect: nla site should lead (CATG) and EcoRI site should follow (G)
 ```
 
 
@@ -202,12 +202,20 @@ Now we can assemble our DNA fragments, which have compatible overhangs, into a p
 
 
 ```{python}
-def assemble(insert, backbone):
+def plasmid_assemble(insert, backbone):
   plasmid = ""
-  plasmid += insert + backbone
+  plasmid += insert
+  plasmid += backbone
   return plasmid
+  
+my_plasmid = plasmid_assemble(ecori_goi_nla, nla_backbone_ecori)
+my_plasmid
 ```
 
+To check, does the length of `my_plasmid` equal the lengths of its constituent DNA fragments?
+```{python}
+len(my_plasmid) == (len(ecori_goi_nla) + len(nla_backbone_ecori)) # True!
+```
 
 
 
