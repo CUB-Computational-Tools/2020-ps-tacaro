@@ -14,8 +14,6 @@ editor_options:
   chunk_output_type: inline
 ---
 
-> Click into a code cell (the gray blocks below) to select or edit it. To run a selected code cell, hit `Ctrl`+`Shift`+`Enter` (Windows & Linux) / `Command`+`Shift`+`Enter` (MacOS). Make sure that each code cell runs successfully before you move on to the next one.
-
 ```{r, include = FALSE, message = FALSE}
 # required behind the scenes to find the correct python installation
 library(reticulate)
@@ -55,7 +53,6 @@ A functional plasmid has a few important components:
 1. A vector backbone that allows insertion/proliferation of the plasmid while also providing antibiotic resistance (for genetic screening)
 2. The gene of interest (GOI)
 
-
 ```{python, include = FALSE}
 goi = "ATGAACAATGCACTATGGTCAAAAATGCTGGTGGAAGAGGATCCCGGGTTTTTTAGACATAGATACACTCATCAGCAACAATGCACTATGGTCAAAAATGCTGGTGGAAGAGGATCCCGGGTTTTTTGAGAAACTG"
 backbone = "aggctcagtcgaaagactgggcctttcgttttatctgttgtttgtcggtgaacgctctctactagagtcacactggctcaccttcgggtgggcctttctgcgtttataccttaaatattggtttaaaagcaggttaaaagacaggttagcggtggccgaaaaacgggcggaaacccttgcaaa"
@@ -65,8 +62,7 @@ In a hidden code chunk I've loaded in a GOI and vector backbone as `goi`,`backbo
 
 NOTE: For ease of viewing, these gene sequences have been significantly abbreviated.
 
-If you've printed `backbone`, you may notice that some of the gene sequence is written in upper-text and some in lower-case. Let's write a function to convert all our genes to upper-case.
-
+If you've printed `backbone` using `print(backbone)` you may notice that some of the gene sequence is written in upper-text and some in lower-case. Let's write a function to convert all our genes to upper-case.
 ```{python}
 def to_upper(seq):
   # First make sure that the argument is a string
@@ -74,16 +70,15 @@ def to_upper(seq):
     print("Error: sequence is not a string")
   # Luckily python has a built-in string operation to convert to upper case, so we don't need to do any work :)
   else:
-    return seq.upper()
+    return seq.upper() # The .upper() function is built into python. It turns a string to upper case.
 ```
 
 ```{python}
 to_upper(1) # Returns an error
-to_upper("abc")
+to_upper("abc") # Returns "ABC"
 ```
 
 Now we can convert all our strings to upper case:
-
 ```{python}
 goi = to_upper(goi)
 backbone = to_upper(backbone)
@@ -98,7 +93,6 @@ T --> A
 G --> C
 
 We'll also add in an optional argument, `rev`, which is a Boolean that specifies whether we want the complement (that reads in-parallel (3' to 5') to our our original sequence), or the **reverse complement**, which is read 5' to 3'.
-
 ```{python}
 def make_complement(seq, rev=False):
   comp = ""
@@ -191,8 +185,8 @@ The structure of the plasmid we are creating is thus:
 ```
           EcoRI           NlaIII              EcoRI
 
-          AATTC--insert--     CATG--backbone--G    
-              G--insert--GTAC     --backbone--CTTAA
+5'          AATTC--insert--     CATG--backbone--G    
+3'              G--insert--GTAC     --backbone--CTTAA
                 
 ```
 
