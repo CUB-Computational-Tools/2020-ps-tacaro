@@ -1,0 +1,42 @@
+---
+title: "Plasmid Assembly"
+subtitle: "Answers"
+author: "Tristan Caro"
+date: "Last knitted `r format(Sys.Date(), '%d %b %Y')`"
+output:
+  html_document: 
+    df_print: paged
+    number_sections: yes
+    toc: yes
+    toc_float: true
+    toc_depth: 3
+    code_folding: show
+editor_options:
+  chunk_output_type: inline
+---
+
+# Answers
+Q1: A python dictionary would be well suited for this because of its key:value pair system. Alternatively, a pandas dataframe or numpy array would be well suited. Parallel arrays (as python lists) could also be used.
+
+Q2: Here it is useful to know the builtin python function `count` 
+
+```{python}
+def gc_content(seq):
+  gc_count = seq.count("C") + seq.count("G")
+  gc_perc = gc_count / len(seq)
+  return gc_perc
+  
+gc_content("GATTACA")
+```
+
+Q3: Python makes this super easy using the `in` operator
+
+```{python}
+example = "Rocks are cool! Look at this rock!"
+"rock" in example # True
+"Physics" in example # False
+
+sequence = "TGCACTATGGTCAAAGATTACAAATGCTGGTGGAAG"
+"GATTACA" in sequence # True
+```
+

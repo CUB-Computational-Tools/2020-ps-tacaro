@@ -1,0 +1,230 @@
+---
+title: "Plasmid Assembly"
+subtitle: "Virtual Plasmids!"
+date: "Last knitted `r format(Sys.Date(), '%d %b %Y')`"
+output:
+  html_document: 
+    df_print: paged
+    number_sections: yes
+    toc: yes
+    toc_float: true
+    toc_depth: 3
+    code_folding: show
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r, include = FALSE, message = FALSE}
+# required behind the scenes to find the correct python installation
+library(reticulate)
+
+# include the following command to activate a specific conda environment:
+#use_condaenv(condaenv = "my_env", required = TRUE)
+
+# note that this may get stuck knitting automatically in RStudio but will work 
+# if you knit manually using the following command from the console:
+#rmarkdown::render("example_python_in_rstudio.Rmd")
+```
+
+```{python, include = FALSE}
+# load IPython library for comprehensive system info
+import IPython
+import re
+print(IPython.sys_info())
+```
+
+# Learning Goals
+- Import and parse data in python
+- Use functions to manipulate DNA sequences with python
+- Understand how plasmid assembly can be done virtually
+- Apply the basics of DNA ligation/restriction enzymes
+
+# Prerequisites
+- Basics of how plasmids are assembled with restriction enzyme digests
+- Basics of bacteria and DNA
+- Basic python syntax
+
+# Background
+Every day, researchers assemble and edit DNA for an uncountable variety of purposes. In the field of Synthetic Biology, researchers often manipulate the DNA of a microorganism in order to change its phenotype, enabling the organism to conduct behavior it otherwise would not have been able to. The canonical example of this is the creation of a circular DNA assembly, known as a *plasmid*, that contains the human gene for insulin. This plasmid is then inserted into a culture of bacteria, often **E. coli**, and produced on an industrial scale.
+
+But how does one create a plasmid? A plasmid must be able to be "read" by its host bacteria and transcribed into RNA, then the target protein. The challenge here isn't in **synthesizing** the DNA (this can be done in an industrial lab at a relatively low cost), but rather in designing a plasmid logically.
+
+A functional plasmid has a few important components:
+1. A vector backbone that allows insertion/proliferation of the plasmid while also providing antibiotic resistance (for genetic screening)
+2. The gene of interest (GOI)
+
+```{python, include = FALSE}
+goi = "ATGAACAATGCACTATGGTCAAAAATGCTGGTGGAAGAGGATCCCGGGTTTTTTAGACATAGATACACTCATCAGCAACAATGCACTATGGTCAAAAATGCTGGTGGAAGAGGATCCCGGGTTTTTTGAGAAACTG"
+backbone = "aggctcagtcgaaagactgggcctttcgttttatctgttgtttgtcggtgaacgctctctactagagtcacactggctcaccttcgggtgggcctttctgcgtttataccttaaatattggtttaaaagcaggttaaaagacaggttagcggtggccgaaaaacgggcggaaacccttgcaaa"
+```
+
+In a hidden code chunk I've loaded in a GOI and vector backbone as `goi`,`backbone`, respectively. You can use a `return` call of these variables to print their values.
+
+NOTE: For ease of viewing, these gene sequences have been significantly abbreviated.
+
+If you've printed `backbone` using `print(backbone)` you may notice that some of the gene sequence is written in upper-text and some in lower-case. Let's write a function to convert all our genes to upper-case.
+```{python}
+def to_upper(seq):
+  # First make sure that the argument is a string
+  if isinstance(seq, str) == False:
+    print("Error: sequence is not a string")
+  # Luckily python has a built-in string operation to convert to upper case, so we don't need to do any work :)
+  else:
+    return seq.upper() # The .upper() function is built into python. It turns a string to upper case.
+```
+
+```{python}
+to_upper(1) # Returns an error
+to_upper("abc") # Returns "ABC"
+```
+
+Now we can convert all our strings to upper case:
+```{python}
+goi = to_upper(goi)
+backbone = to_upper(backbone)
+# Let's inspect prom
+goi # Looks good!
+```
+
+But wait, doesn't DNA have two strands? Yep! DNA is canonically written 5' to 3', the direction that DNA polymerase travels. We can generate the **complementary strand** of DNA using a simple function. This function will turn each nucleotide into its complement:
+A --> T
+C --> G
+T --> A
+G --> C
+
+We'll also add in an optional argument, `rev`, which is a Boolean that specifies whether we want the complement (that reads in-parallel (3' to 5') to our our original sequence), or the **reverse complement**, which is read 5' to 3'.
+```{python}
+def make_complement(seq, rev=False):
+  comp = ""
+  for c in seq:
+    if c == "A":
+      comp += ("T")
+    elif c == "T":
+      comp += ("A")
+    elif c == "G":
+      comp += ("C")
+    elif c == "C":
+      comp += ("G")
+    else:
+      comp.append("N") # append generic Nucleotide if non-canonical base found
+  if rev is False:
+    return comp
+  if rev is True:
+    return comp[::-1]
+```
+
+```{python}
+make_complement("GATTACA") # Let's inspect
+make_complement("GATTACA", rev=True) # Let's try a reverse complement by including the optional argument
+```
+
+Now we'll want to add digestion sites for a restriction enzyme. Let's use EcoRI as an example. 
+The recognition site for EcoRI is `GAATTC` which leaves a 5' overhang of `AATTC` and a 3' overhang of `CTTAA`
+```
+5'      G       <---> AATTC
+3'      CTTAA   <--->     G
+```
+
+When we order our DNA chunks, we definitely want these digest sites on the ends of our DNA!
+
+Let's make a function that can append these important restriction sites to our DNA sequences.
+
+```{python}
+def add_ecori(seq, polarity):
+  if polarity == "head":
+    # Add the recognition site to the 5' end
+    new_seq = "GAATTC" + seq
+  elif polarity == "tail":
+    new_seq = seq + "G"
+  else:
+    print("Could not add EcoRI site - polarity not 'head' or 'tail'")
+    return None
+  return new_seq
+```
+
+If we want our GOI to be inserted at the *end* of the vector backbone, the *head* of the GOI and the *tail* of the backbone will need an EcoRI site.
+
+```{python}
+backbone_ecori = add_ecori(backbone, "tail")
+ecori_goi = add_ecori(goi, "head")
+
+ecori_goi # see that the recognition site is at the front
+```
+
+We need a different restriction enzyme to make sure that the *head* of the backbone reconnects with the *tail* of the GOI, forming a circular plasmid. Let's define another restriction enzyme function based on NlaIII:
+
+```
+5'      CATG <--> 
+3'           <--> GTAC
+```
+
+```{python}
+def add_NlaIII(seq, polarity):
+  if polarity == "head":
+    # Add the recognition site to the 5' end
+    new_seq = "CATG" + seq
+  elif polarity == "tail":
+    new_seq = seq + ""
+  else:
+    print("Could not add EcoRI site - polarity not 'head' or 'tail'")
+    return None
+  return new_seq
+```
+
+And add this site accordingly:
+```{python}
+nla_backbone_ecori = add_NlaIII(backbone_ecori, "head")
+ecori_goi_nla = add_NlaIII(ecori_goi, "tail")
+ecori_goi_nla # Inspect: EcoRI site (GAATTC) should lead and nla site (none) should follow
+nla_backbone_ecori # Inspect: nla site should lead (CATG) and EcoRI site should follow (G)
+```
+
+
+The structure of the plasmid we are creating is thus:
+
+```
+          EcoRI           NlaIII              EcoRI
+
+5'          AATTC--insert--     CATG--backbone--G    
+3'              G--insert--GTAC     --backbone--CTTAA
+                
+```
+
+Now we can assemble our DNA fragments, which have compatible overhangs, into a plasmid! Let's define a function that:
+1. Creates a new DNA sequence
+2. Identifies matching overhangs and "ligates" the input DNA sequences together.
+
+
+```{python}
+def plasmid_assemble(insert, backbone):
+  plasmid = ""
+  plasmid += insert
+  plasmid += backbone
+  return plasmid
+  
+my_plasmid = plasmid_assemble(ecori_goi_nla, nla_backbone_ecori)
+my_plasmid
+```
+
+To check, does the length of `my_plasmid` equal the lengths of its constituent DNA fragments?
+```{python}
+len(my_plasmid) == (len(ecori_goi_nla) + len(nla_backbone_ecori)) # True!
+```
+
+# Questions
+1. A `.fastq` file is a DNA sequence with a "quality score" that corresponds to each nucleotide. The quality score of the nucleotide represents the confidence the sequencing machine has that it is identifying the correct base. What python data structure do you think would work best for representing this kind of parallel data?
+
+2. *GC Content* is the percentage of a DNA sequence that is made up of guanosine and cytosine. G and C bond more strongly to each other than A and T. GC content is thus is an important metric for understanding the structural stability of a DNA sequence. GC content can vary across organisms and taxa in meaningful ways e.g. organisms in high-temperature environments typically have a high GC content to ensure that their DNA can stay together. How would you implement a function that calculates the GC content of a DNA string?
+
+3. Say you want to look for the motif "GATC" in `backbone`. Write a function that can take in a short sequence motif and tell you whether it is present in a larger sequence.
+
+
+
+
+
+
+
+
+
+
+
