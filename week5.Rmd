@@ -145,7 +145,7 @@ m = 0.05
 k = 0.1
 ```
 
-I find parameter `k` to be the most confusing. After all, what in tarnation is a conversion rate between species? I find it helpful to think about it as such: how many rabbits does a wolf have to eat before its population can grow by 1? In this case, a wolf must consume 10 rabbits for another wolf to be added to the population pool.
+I find parameter `k` to be the most confusing. After all, what in `tarnation` is a conversion rate between species? I find it helpful to think about it as such: how many rabbits does a wolf have to eat before its population can grow by 1? In this case, a wolf must consume 10 rabbits for another wolf to be added to the population pool.
 
 Next, we will need a vector to store time and predator/prey abundances. What dimensions do we want this data to be? We probably want *rows* to represent instances of time, and *columns* to hold values of what is happening at that time. So this can be a **long** dataframe that is 3 columns wide: `days`, prey population, predator population. It have one row for each day.
 
