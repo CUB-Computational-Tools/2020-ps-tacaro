@@ -1,0 +1,109 @@
+---
+title: "Lotka-Volterra Equations"
+subtitle: "Predator-Prey Modeling in Python"
+date: "Last knitted `r format(Sys.Date(), '%d %b %Y')`"
+output:
+  html_document: 
+    df_print: paged
+    number_sections: yes
+    toc: yes
+    toc_float: true
+    toc_depth: 3
+    code_folding: show
+editor_options:
+  chunk_output_type: inline
+---
+
+
+
+```{python, include = FALSE}
+import matplotlib.pyplot as plt
+```
+
+# Answers {-}
+> 1. What stands out to you about the results from the Lotka-Volterra equation? Propose a hypothesis explaining your finding.
+
+What is most striking to me is how predictably sinusoidal they are in shape. This is due to the nature of the first-order differential equations that are the basis of the Lotka-Volterra equations:
+$$
+\frac{dx}{dt} = \alpha x - \beta xy \\
+\frac{dy}{dt} = \delta xy - \gamma y
+$$
+Notice how the *loss term* from the prey population is dependent on the population of the predators; additionally, the *gain term* from the predator population is dependent on the population of the prey!
+These two rates of change grow and shrink in **reaction** to each other.
+
+Now - what if humans hunted away all the wolves? What happens to that loss term $\beta xy$?
+
+> 2. What are the major differences in how we implemented these in R compared to in python?
+
+Not too much - the differences would only arise if you were using `numpy` `pandas` versus `tidyverse` tibbles. Python can use the `.append()` method which is neat, and doesn't require you to pre-allocate your data structure. While python lets you access elements starting from the tail of a list using negative values `[-1]`, I am not aware of a builtin way to index this way in R.
+
+> 3. What do you notice is different between plotting that is implemented with `matplotlib` versus using `ggplot`?
+
+As we know, ggplot requires the user to assign *aesthetic* layers that are based off of variables. Matplotlib is done more sequentially. In fact, there are two `plot()` function calls, one for each line to plot!
+
+> 4. Change some of the parameters of the simulation. Explain how the parameter you changed affected the results.
+
+For a fun thought experiment, I changed the predator population to be *double* that of the prey. 100 wolves in a forest with only 50 rabbits! And looking back on our `k` conversion factor, it takes 10 rabbits to generate a new wolf. Things don't look good for the wolves. And indeed they are not. The wolves hunt the rabbits to extinction. Of course, rabbits and wolves cannot exist as fractions - in reality the rabbits would have gone extinct from hunting; then the wolves from starvation. `:(`
+
+```{r}
+library(tidyverse)
+days <- 1000
+initPrey <- 50
+initPred <- 100
+
+a <- 0.01
+b <- 0.2
+m <- 0.05
+k <- 0.1
+
+# Assign empty vectors
+prey <- rep(0, days)
+pred <- rep(0, days)
+# Assign the initial population values to the first cell
+# Note the 1-based indexing.
+prey[1] <- initPrey
+pred[1] <- initPred
+# Inspect the data
+length(prey)
+length(pred)
+prey[1]
+pred[1]
+
+for (t in 2:days) {
+  if (prey[t - 1] <= 0) {
+    prey[t - 1] <- 0
+    prey[t] <- prey[t - 1] + (b * prey[t-1]) - (a * prey[t-1] * pred[t-1])
+    pred[t] <- pred[t - 1] + (k *a * prey[t-1] * pred[t-1]) - (m * pred[t-1])
+  }
+  if (pred[t - 1] <= 0) {
+    pred[t - 1] <- 0
+    prey[t] <- prey[t - 1] + (b * prey[t-1]) - (a * prey[t-1] * pred[t-1])
+    pred[t] <- pred[t - 1] + (k *a * prey[t-1] * pred[t-1]) - (m * pred[t-1])
+  } else {
+  prey[t] <- prey[t - 1] + (b * prey[t-1]) - (a * prey[t-1] * pred[t-1])
+  pred[t] <- pred[t - 1] + (k *a * prey[t-1] * pred[t-1]) - (m * pred[t-1])
+  }
+}
+
+population_data <- tibble(
+  n_prey = prey,
+  n_pred = pred,
+  days = seq(1, 1000)
+)
+
+population_data <- population_data %>% 
+  pivot_longer(!days, names_to = "pop_type", values_to = "count")
+
+population_data_plot <- population_data %>% 
+  ggplot(aes(x = days, y = count, color = pop_type)) +
+  geom_line() +
+  ggtitle("Population of Predator and Prey") +
+  xlab("Time (days)") +
+  ylab("Population") +
+  theme_bw()
+population_data_plot
+
+
+```
+
+
