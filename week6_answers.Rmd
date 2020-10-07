@@ -1,0 +1,65 @@
+---
+title: "Understanding Ohm's Law"
+subtitle: "Answer Key"
+author: "Tristan Caro"
+date: "Last knitted `r format(Sys.Date(), '%d %b %Y')`"
+output:
+  html_document: 
+    df_print: paged
+    number_sections: yes
+    toc: yes
+    toc_float: true
+    toc_depth: 3
+    code_folding: show
+editor_options:
+  chunk_output_type: inline
+---
+
+# Questions
+> 1. How would you expect voltage to change if we kept resistance constant but increased current?
+
+Voltage would increase. According to $V = IR$, voltage is proportional to current and resistance. Therefore, as current increases, the electric pressure (Voltage) on the system will also.
+
+> 2. You want to choose a resistor that can supply 4 volts at 20 mA (milliampere) What strength of resistance should you choose?
+
+We can solve using $R = \frac{V}{I}$ where $V = 4V$ and $I = 0.02A$
+```{python}
+R = 4*0.02
+R
+```
+We would want a $0.08\Omega$ or $8m\Omega$ resistor.
+
+> 3. Try plotting the same plot we did before, but using a power supply that provides voltage of 3 volts. What do you notice?
+
+The current is lower for all values of resistance.
+
+```{python}
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+data1 = data = {"Voltage" : [9,9,9,9,9,9],
+        "Resistance" : [1,2,5,10,20,50]}
+v_high = pd.DataFrame(data, columns = ["Voltage", "Resistance"])
+
+data2 = data = {"Voltage" : [3,3,3,3,3,3],
+        "Resistance" : [1,2,5,10,20,50]}
+v_low = pd.DataFrame(data, columns = ["Voltage", "Resistance"])
+
+v_low["Current"] = v_low["Voltage"]/v_low["Resistance"]
+v_high["Current"] = v_high["Voltage"]/v_high["Resistance"]
+
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.plot("Resistance", "Current", data=v_low)
+ax.plot("Resistance", "Current", data=v_high)
+plt.xlabel("Resistance")
+plt.ylabel("Current")
+plt.show()
+```
+
+
+
+> 4. Resistance, as defined here, only relates to direct current (DC) systems. Doing some googling, what term defines the "resistance" of alternating current (AC) systems?
+
+"Resistance" of AC systems is given by impedance, which is similar to resistance but includes a phase term. This is because alternating currents are defined using wave functions which have amplitude, frequency, phase, etc.

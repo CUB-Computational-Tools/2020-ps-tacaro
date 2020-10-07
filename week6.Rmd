@@ -1,0 +1,110 @@
+---
+title: "Understanding Ohm's Law"
+subtitle: "Using Python"
+date: "Last knitted `r format(Sys.Date(), '%d %b %Y')`"
+output:
+  html_document: 
+    df_print: paged
+    number_sections: yes
+    toc: yes
+    toc_float: true
+    toc_depth: 3
+    code_folding: show
+editor_options:
+  chunk_output_type: inline
+---
+
+```{r, include = FALSE, message = FALSE}
+# required behind the scenes to find the correct python installation
+library(reticulate)
+
+# include the following command to activate a specific conda environment:
+#use_condaenv(condaenv = "my_env", required = TRUE)
+
+# note that this may get stuck knitting automatically in RStudio but will work 
+# if you knit manually using the following command from the console:
+#rmarkdown::render("example_python_in_rstudio.Rmd")
+```
+
+# System Info and Libraries
+
+```{python}
+# load IPython library for comprehensive system info
+import IPython
+print(IPython.sys_info())
+```
+
+```{python}
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+```
+
+
+# Learning Goals
+- Describe the importance of Ohm's law
+- Input values and change them using pandas
+- Plot tibble data using matplotlib
+
+# Introduction
+Ohm's law is fundamental to understanding the basics of how electricity behaves. The law describes the relationship between voltage, amperage, and resistance.
+- Voltage: The difference in electric potential. Can be thought about as the "pressure" between two points. Metaphorically alike to water pushing up against a dam, electricity exerts a pressure on the systems it moves through. This is measured in *volts*.
+- Current: The rate of flow of electric charge. This is measured in *amperes*.
+- Resistance: A value inherent to an object that measures how much it opposes the flow of electric current. This is measured in *ohms*.
+
+These are related by Ohm's law as such:
+$$
+V = IR
+$$
+Depending on what value you are trying to determine, the equation can be rearranged accordingly to...
+$$
+I = \frac{V}{R} \\
+or \\
+R = \frac{V}{I}
+$$
+Where V = voltage, I = current, R = resistance.
+
+# Example
+Let's say we have a power supply pushing a constant voltage (9V) through a wire. We have a box full of resistors we are going to add to the wire and we are curious how the amperage will change. Let's define a tibble to include various resistor values and a constant voltage. We will let amperage = `None` so that we can fill it in later.
+
+```{python}
+data = {"Voltage" : [9,9,9,9,9,9],
+        "Resistance" : [1,2,5,10,20,50]
+}
+t1 = pd.DataFrame(data, columns = ["Voltage", "Resistance"])
+t1
+```
+
+Now we will need to compute a new column with our amperages, calculated using Ohm's law. Here we use
+$$
+I = \frac{V}{R}
+$$
+We can create a new column in our pandas dataframe using the following syntax
+
+```
+dataframe["nameofnewcolumn"] = dataframe["columnn1"] / dataframe["column2"] 
+```
+
+```{python}
+t1["Current"] = t1["Voltage"]/t1["Resistance"]
+t1
+```
+
+Great! Now we can plot the change in current as a function of resistance using matplotlib.
+
+```{python}
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.plot(t1["Resistance"], t1["Current"], color = 'lightblue', linewidth=3)
+plt.xlabel("Resistance")
+plt.ylabel("Current")
+plt.show()
+```
+
+What do you notice about this trend? Current decreases as we add more resistance to the wire!
+
+# Questions
+1. How would you expect voltage to change if we kept resistance constant but increased current?
+2. You want to choose a resistor that can supply 4 volts at 20 mA (milliampere) What strength of resistance should you choose?
+3. Try plotting the same plot we did before, but using a power supply that provides voltage of 3 volts. What do you notice?
+4. Resistance, as defined here, only relates to direct current (DC) systems. Doing some googling, what term defines the "resistance" of alternating current (AC) systems?
