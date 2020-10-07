@@ -23,7 +23,7 @@ Voltage would increase. According to $V = IR$, voltage is proportional to curren
 > 2. You want to choose a resistor that can supply 4 volts at 20 mA (milliampere) What strength of resistance should you choose?
 
 We can solve using $R = \frac{V}{I}$ where $V = 4V$ and $I = 0.02A$
-```{r}
+```{python}
 R = 4*0.02
 R
 ```
@@ -33,22 +33,31 @@ We would want a $0.08\Omega$ or $8m\Omega$ resistor.
 
 The current is lower for all values of resistance.
 
-```{r}
-library(tidyverse)
-t1 <- tibble(
-  voltage = c(9,9,9,9,9,9,3,3,3,3,3,3),
-  resistance = c(1,2,5,10,20,50,1,2,5,10,20,50),
-  HL = c("H","H","H","H","H","H","L","L","L","L","L","L")
-)
+```{python}
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 
-t1 <- t1 %>%
-  mutate(amperage = voltage / resistance)
+data1 = data = {"Voltage" : [9,9,9,9,9,9],
+        "Resistance" : [1,2,5,10,20,50]}
+v_high = pd.DataFrame(data, columns = ["Voltage", "Resistance"])
 
-plot2 <- ggplot(data = t1, aes(x = resistance, y = amperage, color = HL)) +
-  geom_line()
-plot2
+data2 = data = {"Voltage" : [3,3,3,3,3,3],
+        "Resistance" : [1,2,5,10,20,50]}
+v_low = pd.DataFrame(data, columns = ["Voltage", "Resistance"])
 
+v_low["Current"] = v_low["Voltage"]/v_low["Resistance"]
+v_high["Current"] = v_high["Voltage"]/v_high["Resistance"]
+
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.plot("Resistance", "Current", data=v_low)
+ax.plot("Resistance", "Current", data=v_high)
+plt.xlabel("Resistance")
+plt.ylabel("Current")
+plt.show()
 ```
+
 
 
 > 4. Resistance, as defined here, only relates to direct current (DC) systems. Doing some googling, what term defines the "resistance" of alternating current (AC) systems?
