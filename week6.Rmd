@@ -1,0 +1,83 @@
+---
+title: "Understanding Ohm's Law"
+subtitle: "Using R Tibbles"
+author: "Tristan Caro"
+date: "Last knitted `r format(Sys.Date(), '%d %b %Y')`"
+output:
+  html_document: 
+    df_print: paged
+    number_sections: yes
+    toc: yes
+    toc_float: true
+    toc_depth: 3
+    code_folding: show
+editor_options:
+  chunk_output_type: inline
+---
+
+# Learning Goals
+- Describe the importance of Ohm's law
+- Input values and `mutate()` them using tibbles
+- Plot tibble data using `ggplot()`
+
+# Introduction
+Ohm's law is fundamental to understanding the basics of how electricity behaves. The law describes the relationship between voltage, amperage, and resistance.
+- Voltage: The difference in electric potential. Can be thought about as the "pressure" between two points. Metaphorically alike to water pushing up against a dam, electricity exerts a pressure on the systems it moves through. This is measured in *volts*.
+- Current: The rate of flow of electric charge. This is measured in *amperes*.
+- Resistance: A value inherent to an object that measures how much it opposes the flow of electric current. This is measured in *ohms*.
+
+These are related by Ohm's law as such:
+$$
+V = IR
+$$
+Depending on what value you are trying to determine, the equation can be rearranged accordingly to...
+$$
+I = \frac{V}{R} \\
+or \\
+R = \frac{V}{I}
+$$
+Where V = voltage, I = current, R = resistance.
+# Example
+We can start by loading our favorite library, the tidyverse.
+```{r}
+library(tidyverse)
+```
+
+Let's say we have a power supply pushing a constant voltage (9V) through a wire. We have a box full of resistors we are going to add to the wire and we are curious how the amperage will change. Let's define a tibble to include various resistor values and a constant voltage. We will let amperage = `NA` so that we can fill it in later.
+
+```{r}
+t1 <- tibble(
+  voltage = 9,
+  resistance = c(1,2,5,10,20,50)
+)
+t1
+```
+
+Now we need to use the `mutate` function to create a new column with our amperages, calculated using Ohm's law. Here we use
+
+$$
+I = \frac{V}{R}
+$$
+
+```{r}
+t1 <- t1 %>%
+  mutate(amperage = voltage / resistance)
+t1
+```
+
+Great! Now we can plot the change in amperage as a function of resistance using `ggplot`.
+
+```{r}
+plot1 <- ggplot(data = t1, aes(x = resistance, y = amperage)) +
+  geom_line(color = "red")
+plot1
+```
+
+What do you notice about this trend? Amperage decreases as we add more resistance to the wire!
+
+# Questions
+1. How would you expect voltage to change if we kept resistance constant but increased current?
+2. You want to choose a resistor that can supply 4 volts at 20 mA (milliampere) What strength of resistance should you choose?
+3. Try plotting the same plot we did before, but using a power supply that provides voltage of 3 volts. What do you notice?
+4. Resistance, as defined here, only relates to direct current (DC) systems. Doing some googling, what term defines the "resistance" of alternating current (AC) systems?
+
